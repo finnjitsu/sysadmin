@@ -45,6 +45,10 @@ backup-laptop:
 	@echo "$$(date) Backup finished. Local space consumed:"
 	ls -lh $(local_dest)
 
+set-aopen-display:
+	xrandr --output eDP-1 --auto --output DP-2 --mode 2560x1440
+	xrandr --output eDP-1 --off
+
 set-acer-display:
 	xrandr --output eDP-1 --auto --output DP-2-2 --mode 2560x1440
 	xrandr --output eDP-1 --off
@@ -58,7 +62,6 @@ set-laptop-display:
 	xrandr --output DP-2-2 --off
 
 set-aws-tags:
-
 	aws ec2 create-tags --resources $(ResourceID) --tags "Key=Name,Value=$(Name)"
 	aws ec2 create-tags --resources $(ResourceID) --tags "Key=Environment,Value=$(Environment)"
 	aws ec2 create-tags --resources $(ResourceID) --tags "Key=CreatorOwner,Value=$(CreatorOwner)"
@@ -70,3 +73,9 @@ set-aws-tags:
 	aws ec2 create-tags --resources $(ResourceID) --tags "Key=Application,Value=$(Application)"
 	aws ec2 create-tags --resources ${ResourceID} --tags "Key=Deployment Method,Value=$(DeploymentMethod)"
 	aws ec2 create-tags --resources ${ResourceID} --tags "Key=Team,Value=$(Team)"
+
+set-xterm-dark:
+	cd ~ && rm -f .Xresources && ln -s .Xresources.dark .Xresources && xrdb ~/.Xresources
+
+set-xterm-light:
+	cd ~ && rm -f .Xresources && ln -s .Xresources.light .Xresources && xrdb ~/.Xresources
