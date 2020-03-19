@@ -74,8 +74,8 @@ set-aws-tags:
 	aws ec2 create-tags --resources ${ResourceID} --tags "Key=Deployment Method,Value=$(DeploymentMethod)"
 	aws ec2 create-tags --resources ${ResourceID} --tags "Key=Team,Value=$(Team)"
 
-set-xterm-dark:
+set-terminal-dark:
 	cd ~ && rm -f .Xresources && ln -s .Xresources.dark .Xresources && xrdb ~/.Xresources
 
-set-xterm-light:
+set-terminal-light:
 	cd ~ && rm -f .Xresources && ln -s .Xresources.light .Xresources && xrdb ~/.Xresources
