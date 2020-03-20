@@ -60,6 +60,7 @@ set-demo-display:
 set-laptop-display:
 	xrandr --output eDP-1 --auto --output DP-2-2 --mode 1920x1080
 	xrandr --output DP-2-2 --off
+	xrandr --output DP-2 --off
 
 set-aws-tags:
 	aws ec2 create-tags --resources $(ResourceID) --tags "Key=Name,Value=$(Name)"
