@@ -1,4 +1,4 @@
-update-laptop:
+update:
 	sudo apt update
 	sudo apt upgrade
 	sudo apt dist-upgrade
@@ -15,7 +15,7 @@ backup_host    = $$(uname -n)
 backup_archive = $(backup_host)-$(backup_day).tgz
 remote_dest    = s3://finnjitsu-backups/monroe/
 
-backup-laptop:
+backup:
 
 	@echo backup_files: $(backup_files)
 	@echo local_dest: $(local_dest)
@@ -33,6 +33,7 @@ backup-laptop:
 	sudo tar \
 		--exclude=/home/jfinn/arc/repos \
 		--exclude=/home/jfinn/finnjitsu/repos \
+		--exclude=/home/jfinn/.cache \
 		-czf $(local_dest)/$(backup_archive) $(backup_files)
 
 	@echo "$$(date) Encrypting backup file $(local_dest)/$(backup_archive)"
@@ -42,11 +43,18 @@ backup-laptop:
 	aws s3 cp $(local_dest)/$(backup_archive).gpg $(remote_dest) \
 		--storage-class ONEZONE_IA --profile FINNJITSU
 
-	@echo "$$(date) Backup finished. Local space consumed:"
+	@echo "$$(date) Backup finished."
+	@echo "$$(date) Local space consumed:"
 	ls -lh $(local_dest)
+	@echo "$$(date) S3 space consumed:"
+	aws s3 ls $(remote_dest) --profile FINNJITSU
 
 set-aopen-display:
 	xrandr --output eDP-1 --auto --output DP-2 --mode 2560x1440
+	xrandr --output eDP-1 --off
+
+set-aopen-demo:
+	xrandr --output eDP-1 --auto --output DP-2 --mode 1280x1024
 	xrandr --output eDP-1 --off
 
 set-acer-display:
@@ -75,8 +83,8 @@ set-aws-tags:
 	aws ec2 create-tags --resources ${ResourceID} --tags "Key=Deployment Method,Value=$(DeploymentMethod)"
 	aws ec2 create-tags --resources ${ResourceID} --tags "Key=Team,Value=$(Team)"
 
-set-terminal-dark:
-	cd ~ && rm -f .Xresources && ln -s .Xresources.dark .Xresources && xrdb ~/.Xresources
+set-terminal-solarized-dark:
+	cd ~ && rm -f .Xresources && ln -s .Xresources.solarized-dark .Xresources && xrdb ~/.Xresources
 
-set-terminal-light:
-	cd ~ && rm -f .Xresources && ln -s .Xresources.light .Xresources && xrdb ~/.Xresources
+set-terminal-solarized-light:
+	cd ~ && rm -f .Xresources && ln -s .Xresources.solarized-light .Xresources && xrdb ~/.Xresources
