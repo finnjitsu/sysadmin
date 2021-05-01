@@ -31,9 +31,15 @@ backup:
 	@echo "$$(date) Backing up $(backup_files) to $(local_dest)/$(backup_archive)"
 	cd /
 	sudo tar \
-		--exclude=/home/jfinn/arc/repos \
+		--exclude=/home/jfinn/arc/*/repos \
 		--exclude=/home/jfinn/finnjitsu/repos \
 		--exclude=/home/jfinn/.cache \
+		--exclude=/home/jfinn/Downloads \
+		--exclude=/home/jfinn/.local/share/Trash \
+		--exclude=/home/jfinn/.config/Slack \
+		--exclude=/home/jfinn/.vscode/extensions \
+		--exclude=/home/jfinn/snap/discord \
+		--exclude=/home/jfinn/.mozilla/firefox/*/storage/ \
 		-czf $(local_dest)/$(backup_archive) $(backup_files)
 
 	@echo "$$(date) Encrypting backup file $(local_dest)/$(backup_archive)"
@@ -50,11 +56,13 @@ backup:
 	aws s3 ls $(remote_dest) --profile FINNJITSU
 
 set-aopen-display:
-	xrandr --output eDP-1 --auto --output DP-2 --mode 2560x1440
+	xrandr --output DP-2 --mode 2560x1440
 	xrandr --output eDP-1 --off
 
 set-aopen-demo:
-	xrandr --output eDP-1 --auto --output DP-2 --mode 1280x1024
+	#xrandr --output eDP-1 --auto --output DP-2 --mode 1280x1024
+	xrandr --output eDP-1 --auto --output DP-2 --mode 1920x1080i
+	#xrandr --output eDP-1 --auto --output DP-2 --mode 1024x768
 	xrandr --output eDP-1 --off
 
 set-acer-display:
@@ -66,9 +74,11 @@ set-demo-display:
 	xrandr --output eDP-1 --off
 
 set-laptop-display:
-	xrandr --output eDP-1 --auto --output DP-2-2 --mode 1920x1080
-	xrandr --output DP-2-2 --off
+	xrandr --output eDP-1 --mode 1920x1080
 	xrandr --output DP-2 --off
+
+set-both-displays:
+	xrandr --output eDP-1 --mode 1920x1080 --output DP-2 --mode 1920x1080
 
 set-aws-tags:
 	aws ec2 create-tags --resources $(ResourceID) --tags "Key=Name,Value=$(Name)"
@@ -88,3 +98,13 @@ set-terminal-solarized-dark:
 
 set-terminal-solarized-light:
 	cd ~ && rm -f .Xresources && ln -s .Xresources.solarized-light .Xresources && xrdb ~/.Xresources
+
+terraform:
+	sudo rm -f /usr/local/bin/terraform && sudo ln -s /usr/local/bin/terraform-$(version) /usr/local/bin/terraform
+
+backup-router:
+	ssh -t root@openwrt 'sysupgrade -b /tmp/backup-`uname -n`-`date +%F`.tar.gz'
+	scp root@openwrt:/tmp/backup-*.tar.gz .
+	ssh root@openwrt 'rm -f /tmp/backup-*.tar.gz'
+	sudo mv backup-*.tar.gz /var/backups/openwrt
+	ls -lrt /var/backups/openwrt
