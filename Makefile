@@ -32,14 +32,20 @@ backup:
 	cd /
 	sudo tar \
 		--exclude=/home/jfinn/arc/*/repos \
-		--exclude=/home/jfinn/finnjitsu/repos \
+		--exclude=/home/jfinn/arc/git \
+		--exclude=/home/jfinn/arc/repos \
+		--exclude=/home/jfinn/finnjitsu-old/repos \
+		--exclude=/home/jfinn/finnjitsu \
 		--exclude=/home/jfinn/.cache \
 		--exclude=/home/jfinn/Downloads \
 		--exclude=/home/jfinn/.local/share/Trash \
 		--exclude=/home/jfinn/.config/Slack \
 		--exclude=/home/jfinn/.vscode/extensions \
-		--exclude=/home/jfinn/snap/discord \
-		--exclude=/home/jfinn/.mozilla/firefox/*/storage/ \
+		--exclude=/home/jfinn/snap \
+		--exclude=/home/jfinn/.mozilla \
+		--exclude=/home/jfinn/vbox/machines \
+		--exclude=/home/jfinn/.vagrant.d/boxes \
+		--exclude=/opt/OSX-KVM \
 		-czf $(local_dest)/$(backup_archive) $(backup_files)
 
 	@echo "$$(date) Encrypting backup file $(local_dest)/$(backup_archive)"
@@ -76,9 +82,17 @@ set-demo-display:
 set-laptop-display:
 	xrandr --output eDP-1 --mode 1920x1080
 	xrandr --output DP-2 --off
+	xrandr --output HDMI-2 --off
 
 set-both-displays:
-	xrandr --output eDP-1 --mode 1920x1080 --output DP-2 --mode 1920x1080
+	#xrandr --output eDP-1 --auto --output DP-2 --auto --left-of eDP-1
+	#xrandr --output DP-2 --auto --output eDP-1 --auto --right-of DP-2
+	#xrandr --output HDMI-2 --auto --output eDP-1 --auto --below HDMI-2
+	#xrandr --output eDP-1 --auto --output HDMI-2 --auto --above eDP-1
+	xrandr --output eDP-1 --auto --output DP-2 --auto --left-of eDP-1
+
+set-arl-displays:
+	xrandr --output DP-2-1 --auto --output eDP-1 --auto --left-of DP-2-1
 
 set-aws-tags:
 	aws ec2 create-tags --resources $(ResourceID) --tags "Key=Name,Value=$(Name)"
@@ -99,6 +113,9 @@ set-terminal-solarized-dark:
 set-terminal-solarized-light:
 	cd ~ && rm -f .Xresources && ln -s .Xresources.solarized-light .Xresources && xrdb ~/.Xresources
 
+set-terminal-tango-dark:
+	cd ~ && rm -f .Xresources && ln -s .Xresources.tango-dark .Xresources && xrdb ~/.Xresources
+
 terraform:
 	sudo rm -f /usr/local/bin/terraform && sudo ln -s /usr/local/bin/terraform-$(version) /usr/local/bin/terraform
 
@@ -108,3 +125,30 @@ backup-router:
 	ssh root@openwrt 'rm -f /tmp/backup-*.tar.gz'
 	sudo mv backup-*.tar.gz /var/backups/openwrt
 	ls -lrt /var/backups/openwrt
+
+fix-audio:
+	killall pulseaudio; pulseaudio -k  ; rm -r ~/.config/pulse/* ; rm -r ~/.pulse*
+
+bigsur:
+	docker run -i \
+		--device /dev/kvm \
+		-p 50922:10022 \
+		-p 5999:5999 \
+		-v /tmp/.X11-unix:/tmp/.X11-unix \
+		-e "DISPLAY=${DISPLAY:-:0.0}" \
+		-e EXTRA="-display none -vnc 0.0.0.0:99,password=on" \
+		-e GENERATE_UNIQUE=true \
+		-e MASTER_PLIST_URL=https://raw.githubusercontent.com/sickcodes/osx-serial-generator/master/config-custom.plist \
+		-e RAM=16 \
+		-e SMP=2 \
+		-e CORES=2 \
+		sickcodes/docker-osx:big-sur
+
+start-bigsur:
+	(vncviewer &)
+	docker start -ai 28783b1ef8f4
+
+reload_xfce_desktop:
+	killall xfconfd
+	/usr/lib/x86_64-linux-gnu/xfce4/xfconf/xfconfd &
+	xfsettingsd --replace &
